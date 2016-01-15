@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MEMORY_LIMIT=256M \
     MAX_EXECUTION_TIME=90 \
     PORT=9000 \
-    COMPOSER_HOME=/var/.composer
+    COMPOSER_HOME=/home/ez/.composer
 
 ## Get packages
 RUN apt-get update -q -y \
@@ -43,9 +43,6 @@ RUN docker-php-ext-configure mysqli --with-mysqli=mysqlnd \
  && docker-php-ext-install exif gd mbstring intl xsl zip mysqli pdo_mysql \
  && docker-php-ext-enable opcache
 
-# Create Composer directory (cache and auth files)
-RUN mkdir -p $COMPOSER_HOME
-
 # Set timezone
 RUN echo $TIMEZONE > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
 
@@ -68,6 +65,10 @@ RUN sed -i "s@^\[global\]@\[global\]\n\npid = /run/php-fpm.pid@" /usr/local/etc/
 # && sed -i "s@^group = nobody@group = www-data@" /usr/local/etc/php-fpm.d/www.conf.default
 
 
+RUN groupadd -g 10000 ez && useradd -g ez -u 10000 ez --create-home
+# Create Composer directory (cache and auth files)
+RUN mkdir -p $COMPOSER_HOME && chown ez:ez $COMPOSER_HOME
+
 # Get Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin && mv /usr/local/bin/composer.phar /usr/local/bin/composer
 
@@ -83,7 +84,7 @@ ADD prepare_behat.sh /prepare_behat.sh
 ADD config/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 RUN chmod 755 /*.sh
-RUN groupadd -g 10000 ez && useradd -g ez -u 10000 ez
+
 
 WORKDIR /var/www
 
