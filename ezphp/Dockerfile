@@ -34,6 +34,7 @@ RUN apt-get update -q -y \
         acl \
         sudo \
         tree \
+        unzip \
         && rm -rf /var/lib/apt/lists/*
 
 # Install and configure php plugins
